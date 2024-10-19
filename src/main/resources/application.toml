@@ -1,0 +1,14 @@
+micronaut.application.name = 'quickshop'
+
+[micronaut.server]
+cors.enabled = true
+cors.configurations.all.allowed-origins = "*"
+cors.configurations.all.allow-credentials=false
+cors.localhost-pass-through = true
+#host = "localhost"
+port = 2277
+
+
+#[datasources.default]
+#driver-class-name = 'org.postgresql.Driver'
+#db-type = 'postgres'
