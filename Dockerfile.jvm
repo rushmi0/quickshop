@@ -1,0 +1,28 @@
+FROM eclipse-temurin:21-jdk-jammy AS build
+RUN useradd -ms /bin/bash builder
+USER builder
+WORKDIR /home/builder/app
+
+COPY --chown=builder:builder gradlew build.gradle.kts settings.gradle.kts gradle.properties ./
+COPY --chown=builder:builder src ./src
+COPY --chown=builder:builder gradle ./gradle
+
+RUN sed -i 's/\r$//' gradlew
+RUN chmod +x ./gradlew
+RUN ./gradlew build -x test
+
+FROM eclipse-temurin:21-jre-alpine
+RUN apk update && apk add --no-cache bash && rm -rf /var/cache/apk/*
+
+RUN addgroup -S appgroup -g 1000 && \
+    adduser -S appuser -G appgroup -u 1000 -h /app
+
+USER appuser
+WORKDIR /app
+
+COPY --from=build /home/builder/app/build/libs/quickshop-0.1-all-optimized.jar ./
+COPY --chown=appuser:appgroup .env /app/.env
+
+EXPOSE 2277
+
+ENTRYPOINT ["java", "-Xms10m", "-Xmx4g", "-XX:+UseG1GC", "-jar", "quickshop-0.1-all-optimized.jar"]

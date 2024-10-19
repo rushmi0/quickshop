@@ -1,6 +1,5 @@
 package com.quickshop.route.api.v1
 
-import com.quickshop.database.form.HelloForm
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.MutableHttpResponse
@@ -9,6 +8,15 @@ import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Header
 import io.micronaut.http.annotation.Post
 import org.slf4j.LoggerFactory
+
+import io.micronaut.serde.annotation.Serdeable
+
+@Serdeable.Serializable
+@Serdeable.Deserializable
+data class HelloForm(
+    val message: String
+)
+
 
 @Controller("api/v1")
 class Hello {

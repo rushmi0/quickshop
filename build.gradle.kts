@@ -50,9 +50,11 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 
+    // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
+    implementation("org.xerial:sqlite-jdbc:3.46.1.3")
+
     ksp("io.micronaut:micronaut-http-validation")
     ksp("io.micronaut.serde:micronaut-serde-processor")
-    ksp("io.micronaut.servlet:micronaut-servlet-processor")
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
@@ -78,7 +80,7 @@ java {
 graalvmNative.toolchainDetection = false
 
 micronaut {
-    runtime("tomcat")
+    runtime("netty")
     testRuntime("junit5")
     processing {
         incremental(true)

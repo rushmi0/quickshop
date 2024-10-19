@@ -1,0 +1,25 @@
+<configuration>
+
+    <!-- Enable SQL logging for Exposed -->
+    <!--    <logger name="Exposed" level="DEBUG" />-->
+    <!--    <logger name="org.jetbrains.exposed.sql.statements.Statement" level="TRACE" />-->
+
+
+    <!-- Console Appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                [%boldMagenta(%d{yyyy-MM-dd HH:mm:ss.SSS,UTC})] %green([%thread]) %highlight(%-5level) %boldYellow(%logger{36}) - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.quickshop.*" level="INFO"/>
+    <logger name="io.micronaut.http.client" level="TRACE"/>
+
+    <logger name="io.micronaut.http.HttpStatus" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

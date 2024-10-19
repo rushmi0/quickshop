@@ -4,6 +4,6 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable.Serializable
 @Serdeable.Deserializable
-data class HelloForm(
+data class MessageForm(
     val message: String
 )

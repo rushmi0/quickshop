@@ -1,63 +1,159 @@
 package com.quickshop.database.statement
 
-import com.quickshop.database.DatabaseFactory.queryTask
-import com.quickshop.database.form.Content
-import com.quickshop.database.form.LedgerRequest
 import com.quickshop.database.service.LedgerService
 import com.quickshop.database.table.LEDGER
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
+import com.quickshop.database.DatabaseFactory.queryTask
+import com.quickshop.database.record.DebitBalance
+import com.quickshop.database.record.Ledger
+import io.micronaut.context.annotation.Bean
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.intOrNull
+import org.jetbrains.exposed.sql.*
+import org.slf4j.LoggerFactory
+import java.util.*
 
+@Bean
 class LedgerServiceImpl : LedgerService {
 
-    override suspend fun saveLedger(ledgerRequest: LedgerRequest): Boolean {
-        return try {
-            queryTask {
-                // บันทึกข้อมูลลงในฐานข้อมูล
-                LEDGER.insert {
-                    it[NICK_NAME] = ledgerRequest.nick_name
-                    it[CREATED_AT] = ledgerRequest.created_at
-                    it[KIND] = ledgerRequest.kind
-                    it[CONTENT] = ledgerRequest.content.toString() // อาจต้องแปลง content เป็น JSON string ก่อนบันทึก
-                }
+    // ฟังก์ชันสำหรับสร้างบัญชีผู้ใช้ใหม่
+    override suspend fun createUser(fullName: String, nickName: String, email: String, createdAt: String): Boolean = queryTask {
+        try {
+            LEDGER.insert {
+                it[LEDGER_ID] = UUID.randomUUID().toString()
+                it[FULL_NAME] = fullName
+                it[CREATED_AT] = createdAt
+                it[KIND] = 0
+                it[CONTENT] = Json.encodeToString(
+                    mapOf(
+                        "nick_name" to nickName,
+                        "email" to email
+                    )
+                )
             }
             true
         } catch (e: Exception) {
-            // การจัดการข้อผิดพลาดสามารถปรับแต่งเพิ่มเติมได้
-            println("Error saving ledger: ${e.message}")
+            LOG.error("Error during user creation: ${e.message}")
             false
         }
     }
 
-    override suspend fun getLedger(kind: Int, nickName: String): List<LedgerRequest> {
-        return queryTask {
-            try {
-                // เริ่มต้นสร้างคำสั่ง SQL
-                val query = LEDGER.select {
-                    (LEDGER.KIND eq kind) and (LEDGER.NICK_NAME eq nickName)
-                }
 
-                // การค้นหาข้อมูลจากฐานข้อมูล
-                query.map { row ->
-                    LedgerRequest(
-                        nick_name = row[LEDGER.NICK_NAME],
-                        created_at = row[LEDGER.CREATED_AT], // เปลี่ยนเป็น CREATED_AT เพื่อให้ตรงกับการประกาศใน LEDGER.kt
-                        kind = row[LEDGER.KIND],
-                        content = parseContent(row[LEDGER.CONTENT]) // แปลง content จาก JSON string เป็น object
-                    )
-                }
-            } catch (e: Exception) {
-                println("Error fetching ledger: ${e.message}")
-                emptyList()
+    override suspend fun getUserInfo(fullName: String): Ledger? = queryTask {
+        /**
+         * SELECT * FROM LEDGER
+         * WHERE full_name = :fullName
+         */
+        LEDGER.selectAll().where { LEDGER.FULL_NAME eq fullName }
+            .map { rowToLedger(it) }
+            .singleOrNull()
+    }
+
+    override suspend fun deposit(fullName: String, amount: Int, createdAt: String): Boolean = queryTask {
+        try {
+            /**
+             * INSERT INTO LEDGER (full_name, created_at, kind, content)
+             * VALUES (:fullName, :createdAt, 1, '{"amount": :amount}')
+             */
+            LEDGER.insert {
+                it[LEDGER_ID] = UUID.randomUUID().toString()
+                it[FULL_NAME] = fullName
+                it[CREATED_AT] = createdAt
+                it[KIND] = 1  // kind = 1 สำหรับการฝากเงิน
+                it[CONTENT] = Json.encodeToString(mapOf("amount" to amount))
             }
+            true
+        } catch (e: Exception) {
+            LOG.error("Error during deposit: ${e.message}")
+            false
         }
     }
 
-    override fun parseContent(s: String): Content {
-        TODO("Not yet implemented")
+    override suspend fun deduct(fullName: String, price: Int, createdAt: String): Boolean = queryTask {
+        try {
+            /**
+             * INSERT INTO LEDGER (full_name, created_at, kind, content)
+             * VALUES (:fullName, :createdAt, 2, '{"price": :price}')
+             */
+            LEDGER.insert {
+                it[LEDGER_ID] = UUID.randomUUID().toString()
+                it[FULL_NAME] = fullName
+                it[CREATED_AT] = createdAt
+                it[KIND] = 2  // kind = 2 สำหรับการตัดเงินจากการซื้อสินค้า
+                it[CONTENT] = Json.encodeToString(mapOf("price" to price))
+            }
+            true
+        } catch (e: Exception) {
+            LOG.error("Error during deduct: ${e.message}")
+            false
+        }
     }
 
+    override suspend fun getDebitBalance(fullName: String): DebitBalance? = queryTask {
+        /**
+         * SELECT SUM(CAST(content->>'amount' AS INTEGER))
+         * FROM LEDGER
+         * WHERE full_name = :fullName AND kind = 1
+         */
+        val deposits = LEDGER
+            .selectAll().where { (LEDGER.FULL_NAME eq fullName) and (LEDGER.KIND eq 1) }
+            .mapNotNull { it[LEDGER.CONTENT].toAmount() }
+            .sum()
+
+        /**
+         * SELECT SUM(CAST(content->>'price' AS INTEGER))
+         * FROM LEDGER
+         * WHERE full_name = :fullName AND kind = 2
+         */
+        val spends = LEDGER
+            .selectAll().where { (LEDGER.FULL_NAME eq fullName) and (LEDGER.KIND eq 2) }
+            .mapNotNull { it[LEDGER.CONTENT].toPrice() }
+            .sum()
+
+        DebitBalance(fullName, deposits, spends, deposits - spends)
+    }
+
+    private fun rowToLedger(row: ResultRow): Ledger {
+        return Ledger(
+            row[LEDGER.FULL_NAME],
+            row[LEDGER.CREATED_AT],
+            row[LEDGER.KIND],
+            row[LEDGER.CONTENT]
+        )
+    }
+
+    private fun String.toAmount(): Int? {
+        /**
+         * Extract 'amount' field from JSON content
+         */
+        return try {
+            Json.parseToJsonElement(this).jsonObject["amount"]?.jsonPrimitive?.intOrNull
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun String.toPrice(): Int? {
+        /**
+         * Extract 'price' field from JSON content
+         */
+        return try {
+            Json.parseToJsonElement(this).jsonObject["price"]?.jsonPrimitive?.intOrNull
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(LedgerServiceImpl::class.java)
+    }
+
+}
+
+fun main() {
+
+    println(UUID.randomUUID().toString())
 
 }

@@ -4,9 +4,9 @@ import org.jetbrains.exposed.sql.Table
 
 object LEDGER: Table("ledger") {
 
-    val LEDGER_ID = integer("ledger_id").uniqueIndex()
-    val NICK_NAME = varchar("nick_name", 64)
-    val CREATED_AT = varchar("created_at", 64)
+    val LEDGER_ID = text("ledger_id").uniqueIndex()
+    val FULL_NAME = text("full_name")
+    val CREATED_AT = text("created_at")
     val KIND = integer("kind")
     val CONTENT = text("content")
 

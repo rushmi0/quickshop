@@ -1,0 +1,27 @@
+###
+
+POST https://demo.rushmi0.win/api/v1/debit/create
+Content-Type: application/json
+
+{
+  "full_name": "Watcharaol Phongwilai",
+  "createdAt": "28/10/2024",
+  "content": {
+    "nick_name": "John",
+    "email": "ph.watcharapol_st@tni.ac.th"
+  }
+}
+
+###
+
+GET https://demo.rushmi0.win/api/v1/user-info?fullName=lnwza%20007
+Content-Type: application/json
+
+###
+
+GET https://demo.rushmi0.win/api/v1/debit-balance?fullName=lnwza%20007
+Content-Type: application/json
+
+###
+
+
