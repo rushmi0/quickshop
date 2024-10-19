@@ -131,9 +131,6 @@ class LedgerServiceImpl : LedgerService {
     }
 
     private fun String.toAmount(): Int? {
-        /**
-         * Extract 'amount' field from JSON content
-         */
         return try {
             Json.parseToJsonElement(this).jsonObject["amount"]?.jsonPrimitive?.intOrNull
         } catch (e: Exception) {
@@ -142,9 +139,6 @@ class LedgerServiceImpl : LedgerService {
     }
 
     private fun String.toPrice(): Int? {
-        /**
-         * Extract 'price' field from JSON content
-         */
         return try {
             Json.parseToJsonElement(this).jsonObject["price"]?.jsonPrimitive?.intOrNull
         } catch (e: Exception) {
@@ -155,11 +149,5 @@ class LedgerServiceImpl : LedgerService {
     companion object {
         private val LOG = LoggerFactory.getLogger(LedgerServiceImpl::class.java)
     }
-
-}
-
-fun main() {
-
-    println(UUID.randomUUID().toString())
 
 }

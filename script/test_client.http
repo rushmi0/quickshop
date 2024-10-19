@@ -14,12 +14,12 @@ Content-Type: application/json
 
 ###
 
-GET https://demo.rushmi0.win/api/v1/user-info?fullName=lnwza%20007
+GET https://demo.rushmi0.win/api/v1/user-info?fullName=Watcharaol%20Phongwilai
 Content-Type: application/json
 
 ###
 
-GET https://demo.rushmi0.win/api/v1/debit-balance?fullName=lnwza%20007
+GET https://demo.rushmi0.win/api/v1/debit-balance?fullName=Watcharaol%20Phongwilai
 Content-Type: application/json
 
 ###
