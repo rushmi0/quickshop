@@ -6,7 +6,6 @@ import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MutableHttpResponse
-import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.QueryValue
 import jakarta.inject.Inject
 

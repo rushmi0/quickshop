@@ -13,6 +13,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.intOrNull
 import org.jetbrains.exposed.sql.*
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Bean
@@ -112,7 +114,11 @@ class LedgerServiceImpl : LedgerService {
             .mapNotNull { it[LEDGER.CONTENT].toPrice() }
             .sum()
 
-        DebitBalance(fullName, deposits, spends, deposits - spends)
+        // กำหนด createdAt เป็นเวลาปัจจุบันในรูปแบบ MM/dd/yyyy
+        val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+
+
+        DebitBalance(createdAt, fullName, deposits, spends, deposits - spends)
     }
 
     private fun rowToLedger(row: ResultRow): Ledger {

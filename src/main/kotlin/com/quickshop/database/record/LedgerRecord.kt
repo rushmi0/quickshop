@@ -14,6 +14,7 @@ data class Ledger(
 @Serdeable.Serializable
 @Serdeable.Deserializable
 data class DebitBalance(
+    val createdAt: String,
     val fullName: String,
     val totalDeposit: Int,
     val totalSpent: Int,
