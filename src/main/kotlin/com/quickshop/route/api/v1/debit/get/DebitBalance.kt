@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 class DebitBalance(@Inject private val ledgerService: LedgerServiceImpl) {
 
     @Get("/")
-    suspend fun getDebitBalance(@QueryValue fullName: String): MutableHttpResponse<out Any>? {
+    suspend fun debitBalance(@QueryValue fullName: String): MutableHttpResponse<out Any>? {
         val balance = ledgerService.getDebitBalance(fullName)
         return if (balance != null) {
             HttpResponse.ok(balance)

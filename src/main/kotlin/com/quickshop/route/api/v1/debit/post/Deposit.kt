@@ -7,6 +7,7 @@ import io.micronaut.http.MediaType
 import io.micronaut.http.MutableHttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Post
 import io.micronaut.serde.annotation.Serdeable
 import jakarta.inject.Inject
@@ -20,8 +21,25 @@ data class DepositData(
     val amount: Int
 )
 
+@Serdeable.Serializable
+data class DepositRecord(
+    val createdAt: String,  // วันที่ฝากเงิน
+    val amount: Int         // จำนวนเงินที่ฝาก
+)
+
 @Controller("api/v1/debit")
 class Deposit(@Inject private val ledgerService: LedgerServiceImpl) {
+
+
+    @Get("/deposits/{fullName}", produces = [MediaType.APPLICATION_JSON])
+    suspend fun depositsList(fullName: String): MutableHttpResponse<out Any>? {
+        return try {
+            val deposits = ledgerService.getUserDeposits(fullName)
+            HttpResponse.ok(deposits)
+        } catch (e: Exception) {
+            HttpResponse.serverError(MessageForm("Failed"))
+        }
+    }
 
 
     @Post("/deposit", consumes = [MediaType.APPLICATION_JSON], produces = [MediaType.APPLICATION_JSON])

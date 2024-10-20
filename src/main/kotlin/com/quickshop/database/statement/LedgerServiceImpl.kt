@@ -5,6 +5,7 @@ import com.quickshop.database.table.LEDGER
 import com.quickshop.database.DatabaseFactory.queryTask
 import com.quickshop.database.record.DebitBalance
 import com.quickshop.database.record.Ledger
+import com.quickshop.route.api.v1.debit.post.DepositRecord
 import com.quickshop.util.ShiftTo.toBSha256
 import com.quickshop.util.ShiftTo.toHex
 import io.micronaut.context.annotation.Bean
@@ -46,16 +47,6 @@ class LedgerServiceImpl : LedgerService {
         }
     }
 
-
-    override suspend fun getUserInfo(fullName: String): Ledger? = queryTask {
-        /**
-         * SELECT * FROM LEDGER
-         * WHERE full_name = :fullName
-         */
-        LEDGER.selectAll().where { LEDGER.FULL_NAME eq fullName }
-            .map { rowToLedger(it) }
-            .singleOrNull()
-    }
 
 
     override suspend fun deposit(fullName: String, amount: Int, createdAt: String): Boolean = queryTask {
@@ -132,6 +123,20 @@ class LedgerServiceImpl : LedgerService {
         DebitBalance(createdAt, fullName, deposits, spends, deposits - spends)
     }
 
+
+
+    override suspend fun getUserInfo(fullName: String): Ledger? = queryTask {
+        /**
+         * SELECT * FROM LEDGER
+         * WHERE full_name = :fullName AND kind = 0
+         */
+        LEDGER.selectAll()
+            .where { (LEDGER.FULL_NAME eq fullName) and (LEDGER.KIND eq 0) }
+            .map { rowToLedger(it) }
+            .singleOrNull()
+    }
+
+
     private fun rowToLedger(row: ResultRow): Ledger {
         return Ledger(
             row[LEDGER.FULL_NAME],
@@ -140,6 +145,28 @@ class LedgerServiceImpl : LedgerService {
             row[LEDGER.CONTENT]
         )
     }
+
+
+    // ฟังก์ชันสำหรับดึงรายการฝากเงินของผู้ใช้
+    suspend fun getUserDeposits(fullName: String): List<DepositRecord> = queryTask {
+        /**
+         * SELECT created_at, content->>'amount' AS amount
+         * FROM LEDGER
+         * WHERE full_name = :fullName AND kind = 1
+         */
+        LEDGER
+            .selectAll().where { (LEDGER.FULL_NAME eq fullName) and (LEDGER.KIND eq 1) }
+            .mapNotNull {
+                val amount = it[LEDGER.CONTENT].toAmount()
+                amount?.let { amt ->
+                    DepositRecord(
+                        createdAt = it[LEDGER.CREATED_AT],  // วันที่ฝาก
+                        amount = amt                        // จำนวนเงินที่ฝาก
+                    )
+                }
+            }
+    }
+
 
     private fun String.toAmount(): Int? {
         return try {

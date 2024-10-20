@@ -7,14 +7,15 @@ import io.github.cdimascio.dotenv.dotenv
 import com.quickshop.database.table.LEDGER
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.micronaut.context.annotation.Bean
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 
-@Bean
+
 object DatabaseFactory {
 
     private val dotenv: Dotenv = dotenv {
@@ -67,7 +68,7 @@ object DatabaseFactory {
 
     suspend fun <T> queryTask(block: () -> T): T = withContext(Dispatchers.IO) {
         transaction {
-            //addLogger(StdOutSqlLogger)
+            addLogger(StdOutSqlLogger)
             block()
         }
     }
