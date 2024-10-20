@@ -36,4 +36,5 @@ class Deduct(@Inject private val ledgerService: LedgerServiceImpl) {
     companion object {
         private val LOG = LoggerFactory.getLogger(Deduct::class.java)
     }
+
 }

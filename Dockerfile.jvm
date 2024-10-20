@@ -23,6 +23,9 @@ WORKDIR /app
 COPY --from=build /home/builder/app/build/libs/quickshop-0.1-all-optimized.jar ./
 COPY --chown=appuser:appgroup .env /app/.env
 
+# คัดลอกฐานข้อมูลไปยัง container
+COPY --chown=appuser:appgroup src/main/kotlin/com/quickshop/database/storage.db /app/storage.db
+
 EXPOSE 2277
 
 ENTRYPOINT ["java", "-Xms10m", "-Xmx4g", "-XX:+UseG1GC", "-jar", "quickshop-0.1-all-optimized.jar"]

@@ -5,6 +5,8 @@ import com.quickshop.database.table.LEDGER
 import com.quickshop.database.DatabaseFactory.queryTask
 import com.quickshop.database.record.DebitBalance
 import com.quickshop.database.record.Ledger
+import com.quickshop.util.ShiftTo.toBSha256
+import com.quickshop.util.ShiftTo.toHex
 import io.micronaut.context.annotation.Bean
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -23,8 +25,10 @@ class LedgerServiceImpl : LedgerService {
     // ฟังก์ชันสำหรับสร้างบัญชีผู้ใช้ใหม่
     override suspend fun createUser(fullName: String, nickName: String, email: String, createdAt: String): Boolean = queryTask {
         try {
+            val id = "${UUID.randomUUID()}$fullName$nickName$email$createdAt".toBSha256().toHex()
+
             LEDGER.insert {
-                it[LEDGER_ID] = UUID.randomUUID().toString()
+                it[LEDGER_ID] = id
                 it[FULL_NAME] = fullName
                 it[CREATED_AT] = createdAt
                 it[KIND] = 0
@@ -53,14 +57,18 @@ class LedgerServiceImpl : LedgerService {
             .singleOrNull()
     }
 
+
     override suspend fun deposit(fullName: String, amount: Int, createdAt: String): Boolean = queryTask {
         try {
+
+            val id = "${UUID.randomUUID()}$fullName$amount$createdAt".toBSha256().toHex()
+
             /**
              * INSERT INTO LEDGER (full_name, created_at, kind, content)
              * VALUES (:fullName, :createdAt, 1, '{"amount": :amount}')
              */
             LEDGER.insert {
-                it[LEDGER_ID] = UUID.randomUUID().toString()
+                it[LEDGER_ID] = id
                 it[FULL_NAME] = fullName
                 it[CREATED_AT] = createdAt
                 it[KIND] = 1  // kind = 1 สำหรับการฝากเงิน
@@ -75,12 +83,15 @@ class LedgerServiceImpl : LedgerService {
 
     override suspend fun deduct(fullName: String, price: Int, createdAt: String): Boolean = queryTask {
         try {
+
+            val id = "${UUID.randomUUID()}$fullName$price$createdAt".toBSha256().toHex()
+
             /**
              * INSERT INTO LEDGER (full_name, created_at, kind, content)
              * VALUES (:fullName, :createdAt, 2, '{"price": :price}')
              */
             LEDGER.insert {
-                it[LEDGER_ID] = UUID.randomUUID().toString()
+                it[LEDGER_ID] = id
                 it[FULL_NAME] = fullName
                 it[CREATED_AT] = createdAt
                 it[KIND] = 2  // kind = 2 สำหรับการตัดเงินจากการซื้อสินค้า

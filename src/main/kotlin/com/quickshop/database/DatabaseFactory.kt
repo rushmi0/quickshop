@@ -1,10 +1,13 @@
 package com.quickshop.database
 
+
+import io.github.cdimascio.dotenv.Dotenv
+import io.github.cdimascio.dotenv.dotenv
+
 import com.quickshop.database.table.LEDGER
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.micronaut.context.annotation.Bean
-import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.Database
@@ -13,6 +16,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 @Bean
 object DatabaseFactory {
+
+    private val dotenv: Dotenv = dotenv {
+        directory = "." // root path
+        filename = ".env"
+    }
 
     @JvmStatic
     fun initialize() {
@@ -25,13 +33,16 @@ object DatabaseFactory {
 
     private fun hikariConfig(): HikariDataSource {
 
+        val DATABASE_PATH: String by lazy {
+            dotenv["DATABASE_PATH"] ?: "src/main/kotlin/com/quickshop/database/storage.db"
+        }
+
         val config = HikariConfig().apply {
 
             driverClassName = "org.sqlite.JDBC"
 
             // กำหนด่าสำหรับการเชื่อมต่อกับฐานข้อมูล
-            jdbcUrl = "jdbc:sqlite:/home/rushmi0/items/dev/Kotlin/JVM/quickshop/src/main/kotlin/com/quickshop/database/storage.db"
-
+            jdbcUrl = "jdbc:sqlite:$DATABASE_PATH"
 
             minimumIdle = 2
             maximumPoolSize = 10

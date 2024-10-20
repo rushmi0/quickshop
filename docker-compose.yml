@@ -11,9 +11,3 @@ services:
     ports:
       - "2277:2277"
 
-
-  cloudflared-tunnel:
-    container_name: cloudflared-tunnel
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run --token

@@ -8,6 +8,7 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.MutableHttpResponse
 import io.micronaut.http.annotation.QueryValue
 import jakarta.inject.Inject
+import org.slf4j.LoggerFactory
 
 @Controller("/api/v1/debit-balance")
 class DebitBalance(@Inject private val ledgerService: LedgerServiceImpl) {
@@ -20,6 +21,10 @@ class DebitBalance(@Inject private val ledgerService: LedgerServiceImpl) {
         } else {
             HttpResponse.badRequest(MessageForm("Failed"))
         }
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(DebitBalance::class.java)
     }
 
 }
