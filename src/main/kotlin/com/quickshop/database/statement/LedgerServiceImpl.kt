@@ -5,6 +5,7 @@ import com.quickshop.database.table.LEDGER
 import com.quickshop.database.DatabaseFactory.queryTask
 import com.quickshop.database.record.DebitBalance
 import com.quickshop.database.record.Ledger
+import com.quickshop.route.api.v1.debit.post.DeductRecord
 import com.quickshop.route.api.v1.debit.post.DepositRecord
 import com.quickshop.util.ShiftTo.toBSha256
 import com.quickshop.util.ShiftTo.toHex
@@ -145,6 +146,27 @@ class LedgerServiceImpl : LedgerService {
             row[LEDGER.CONTENT]
         )
     }
+
+
+    suspend fun getUserDeducts(fullName: String): List<DeductRecord> = queryTask {
+        /**
+         * SELECT created_at, content->>'price' AS price
+         * FROM LEDGER
+         * WHERE full_name = :fullName AND kind = 2
+         */
+        LEDGER
+            .selectAll().where { (LEDGER.FULL_NAME eq fullName) and (LEDGER.KIND eq 2) }
+            .mapNotNull {
+                val price = it[LEDGER.CONTENT].toPrice()
+                price?.let { amt ->
+                    DeductRecord(
+                        createdAt = it[LEDGER.CREATED_AT],  // วันที่ตัดเงิน
+                        price = amt                          // จำนวนเงินที่ตัด
+                    )
+                }
+            }
+    }
+
 
 
     // ฟังก์ชันสำหรับดึงรายการฝากเงินของผู้ใช้

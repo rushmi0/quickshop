@@ -6,15 +6,14 @@ import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MutableHttpResponse
-import io.micronaut.http.annotation.QueryValue
 import jakarta.inject.Inject
 import org.slf4j.LoggerFactory
 
 @Controller("/api/v1/debit-balance")
 class DebitBalance(@Inject private val ledgerService: LedgerServiceImpl) {
 
-    @Get("/")
-    suspend fun debitBalance(@QueryValue fullName: String): MutableHttpResponse<out Any>? {
+    @Get("/user/{fullName}")
+    suspend fun debitBalance(fullName: String): MutableHttpResponse<out Any>? {
         val balance = ledgerService.getDebitBalance(fullName)
         return if (balance != null) {
             HttpResponse.ok(balance)

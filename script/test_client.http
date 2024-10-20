@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ###
 
-GET https://demo.rushmi0.win/api/v1/debit-balance?fullName=Watcharapol%20Phongwilai
+GET https://demo.rushmi0.win/api/v1/debit-balance/user/Watcharapol%20Phongwilai
 Content-Type: application/json
 
 ###
@@ -28,7 +28,8 @@ GET https://demo.rushmi0.win/api/v1/debit/deposits/Watcharapol%20Phongwilai
 Content-Type: application/json
 
 ###
-
+GET https://demo.rushmi0.win/api/v1/debit/deduct/Watcharapol%20Phongwilai
+Content-Type: application/json
 
 
 
